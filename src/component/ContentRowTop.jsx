@@ -3,7 +3,7 @@ import { GenresInDb } from "./GenresInDb";
 import { LastMovieInDb } from "./LastMovieInDb";
 import { TableMovie } from "./TableMovie";
 
-export const ContentRowTop = () => {
+export const  ContentRowTop = () => {
   return (
     <div className="container-fluid">
       <div className="d-sm-flex align-items-center justify-content-between mb-4">

@@ -14,7 +14,7 @@ export const ContentRowMovies = () => {
       color: "success",
       title: "Total awards",
       icon: "fas fa-award",
-      value: 21,
+      value: 79,
     },
     {
       id: crypto.randomUUID(),
