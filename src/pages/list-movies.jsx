@@ -1,13 +1,29 @@
-import { Card, CardBody, Table } from "react-bootstrap";
-import Pagination from "react-bootstrap/Pagination";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Col,
+  Row,
+  Table,
+} from "react-bootstrap";
 import { TableItem } from "../component/TableItem";
 import { useEffect, useState } from "react";
 import { Loading } from "../component/Loading";
+import { Paginator } from "../component/Paginator";
+import { FormSearch } from "../component/FormSearch";
+import { FormMovie } from "../component/FormMovie";
+import { showMessage } from "../component/Toast";
 
 export const ListMovie = () => {
+  const [movie, setMovie] = useState(null);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ pages: [],currentPage: 1  });
+  const [pagination, setPagination] = useState({
+    pagesCount: 0,
+    pages: [],
+    currentPage: 1,
+  });
 
   const getMovies = async (endpoint = "/api/v1/movies") => {
     try {
@@ -26,7 +42,6 @@ export const ListMovie = () => {
     getMovies();
   }, []);
 
-
   const handlePagination = async (endpoint) => {
     getMovies(endpoint);
   };
@@ -42,53 +57,142 @@ export const ListMovie = () => {
     }
   };
 
+  const handleAddMovie = async (data) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_API_URL}/movies`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      const result = await response.json();
+
+      showMessage(result.message);
+      getMovies();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleEditMovie = async (id) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_API_URL}/movies/${id}`
+      );
+      const result = await response.json();
+
+      result.ok && setMovie(result.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleUpdateMovie = async (id, data) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_API_URL}/movies/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      const result = await response.json();
+      setMovies(
+        movies.map((movie) =>
+          movie.id === result.data.id ? result.data : movie
+        )
+      );
+      setMovie(null)
+      showMessage(result.message)
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDeleteMovie = async (id) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_API_URL}/movies/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (result.ok){
+        showMessage(result.message)
+        setMovie(movies.filter(movie => movie.id !== id))
+      }
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
-    <Card className="shadow-lg bg-dark " style={{ width: "640px" }}>
-      <CardBody>
-        <Pagination>
-          <Pagination.Prev onClick={handlePrevPage}/>
-
-          {pagination.pages.map((paginate) => (
-            <Pagination.Item
-              key={paginate.number}
-              active={paginate.number === pagination.currentPage}
-              activeLabel=""
-              onClick={() => handlePagination(paginate.url)}
-            >
-              {paginate.number}
-            </Pagination.Item>
-          ))}
-
-          <Pagination.Next onClick={handleNextPage}/>
-        </Pagination>
-        {loading ? (
-          <Loading />
-        ) : (
-          <Table striped borderless className="text-white">
-            <thead>
-              <tr>
-                <th>Título </th>
-                <th>Duración</th>
-                <th>Rating</th>
-                <th>Géneros</th>
-                <th>Premios</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movies.map(({ id, title, length, awards, rating, genre }) => (
-                <TableItem
-                  key={id}
-                  title={title}
-                  length={length}
-                  awards={awards}
-                  rating={rating}
-                  genre={genre}
-                />
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </CardBody>
-    </Card>
+    <Row>
+      <Col sm={12} lg={4}>
+        <Card className=" shadow-lg bg-dark text-white">
+          <CardHeader className=" shadow-lg bg-dark ">
+            <CardTitle>{movie ? "Editar" : "Agregar"} Pelicula</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <FormMovie
+              handleAddMovie={handleAddMovie}
+              handleUpdateMovie={handleUpdateMovie}
+              movie={movie}
+              setMovie={setMovie}
+            />
+          </CardBody>
+        </Card>
+      </Col>
+      <Col sm={12} lg={8}>
+        <Card className=" shadow-lg bg-dark ">
+          <CardBody>
+            <CardHeader className="d-flex shadow-lg bg-dark justify-content-between">
+              <FormSearch getMovies={getMovies} />
+              <Paginator
+                pagination={pagination}
+                handleNextPage={handleNextPage}
+                handlePagination={handlePagination}
+                handlePrevPage={handlePrevPage}
+              />
+            </CardHeader>
+            {loading ? (
+              <Loading />
+            ) : (
+              <Table striped borderless className="text-white" responsive>
+                <thead>
+                  <tr>
+                    <th>Título </th>
+                    <th>Duración</th>
+                    <th>Rating</th>
+                    <th>Géneros</th>
+                    <th>Premios</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movies.map((movie) => (
+                    <TableItem
+                      key={movie.id}
+                      movie={movie}
+                      handleEditMovie={handleEditMovie}
+                      handleDeleteMovie={handleDeleteMovie}
+                    />
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </CardBody>
+        </Card>
+      </Col>
+    </Row>
   );
 };
