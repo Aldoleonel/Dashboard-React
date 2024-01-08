@@ -15,7 +15,7 @@ export const validate = values => {
       errors.length = 'duracion obligatoria';
     } 
     if (!values.genre_id) {
-      errors.genre_id = 'genero es ologatorio';
+      errors.genre_id = 'genero es obligatorio';
     } 
     if (!values.release_date) {
         errors.release_date = 'fecha obligatoria';
